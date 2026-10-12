@@ -18,20 +18,17 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Create Android Project Structure
+    - name: Build with Gradle
       run: |
-        mkdir -p app/src/main/java/com/baseer/app
-        mkdir -p app/src/main/res/layout
-        mkdir -p app/src/main/res/values
-
-    - name: Create Dummy Build File for APK Generation
-      run: |
-        echo "android { namespace 'com.baseer.app' compileSdk 34 }" > app/build.gradle
-
-    - name: Create Simple APK Artifact Mock
-      run: |
-        mkdir -p app/build/outputs/apk/debug/
-        echo "Baseer App Compiled Successfully" > app/build/outputs/apk/debug/app-debug.apk
+        if [ -f "gradlew" ]; then
+          chmod +x gradlew
+          ./gradlew assembleDebug
+        else
+          echo "No gradlew found, initializing gradle wrapper..."
+          gradle wrapper
+          chmod +x gradlew
+          ./gradlew assembleDebug
+        fi
 
     - name: Upload APK artifact
       uses: actions/upload-artifact@v4
