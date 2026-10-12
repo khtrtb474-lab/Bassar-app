@@ -1,15 +1,22 @@
 package com.baseer.app
 
 import android.os.Bundle
+import android.speech.tts.TextToSpeech
 import android.widget.Button
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import java.util.Locale
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
+
+    private var tts: TextToSpeech? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        // تهيئة محرك النطق الصوتي
+        tts = TextToSpeech(this, this)
 
         val btnStartHelp = findViewById<Button>(R.id.btnStartHelp)
         val btnWhatIsFront = findViewById<Button>(R.id.btnWhatIsFront)
@@ -19,31 +26,48 @@ class MainActivity : AppCompatActivity() {
         val btnStopHelp = findViewById<Button>(R.id.btnStopHelp)
 
         btnStartHelp.setOnClickListener {
-            showToast("مرحبًا بك في بصير، مساعدك الذكي.")
+            speakOut("مرحبًا بك في بصير، مساعدك الذكي.")
         }
 
         btnWhatIsFront.setOnClickListener {
-            showToast("جاري فحص ما هو أمامك...")
+            speakOut("جاري فحص ما هو أمامك...")
         }
 
         btnGoToPlace.setOnClickListener {
-            showToast("إلى أين تريد الذهاب؟")
+            speakOut("إلى أين تريد الذهاب؟")
         }
 
         btnWhereAmI.setOnClickListener {
-            showToast("جاري تحديد موقعك الحالي...")
+            speakOut("جاري تحديد موقعك الحالي...")
         }
 
         btnSavedPlaces.setOnClickListener {
-            showToast("عرض الوجهات المحفوظة.")
+            speakOut("عرض الوجهات المحفوظة.")
         }
 
         btnStopHelp.setOnClickListener {
-            showToast("تم إيقاف المساعدة.")
+            speakOut("تم إيقاف المساعدة.")
         }
     }
 
-    private fun showToast(message: String) {
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+    override fun onInit(status: Int) {
+        if (status == TextToSpeech.SUCCESS) {
+            val result = tts?.setLanguage(Locale("ar"))
+            if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
+                Toast.makeText(this, "اللغة العربية غير متوفرة في محرك الصوت", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun speakOut(text: String) {
+        tts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, "")
+    }
+
+    override fun onDestroy() {
+        if (tts != null) {
+            tts?.stop()
+            tts?.shutdown()
+        }
+        super.onDestroy()
     }
 }
