@@ -1,15 +1,20 @@
 package com.baseer.app
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
 import android.widget.Button
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import java.util.Locale
 
 class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
 
     private var tts: TextToSpeech? = null
+    private val CAMERA_PERMISSION_REQUEST_CODE = 100
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -29,8 +34,9 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
             speakOut("مرحبًا بك في بصير، مساعدك الذكي.")
         }
 
+        // زر ماذا يوجد أمامي مع التحقق من صلاحية الكاميرا
         btnWhatIsFront.setOnClickListener {
-            speakOut("جاري فحص ما هو أمامك...")
+            checkCameraPermissionAndScan()
         }
 
         btnGoToPlace.setOnClickListener {
@@ -47,6 +53,38 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
 
         btnStopHelp.setOnClickListener {
             speakOut("تم إيقاف المساعدة.")
+        }
+    }
+
+    private fun checkCameraPermissionAndScan() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+            != PackageManager.PERMISSION_GRANTED
+        ) {
+            // طلب الصلاحية إذا لم تكن ممنوحة
+            speakOut("الرجاء السماح بتطبيق بصير باستخدام الكاميرا لفحص ما أماه")
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(Manifest.permission.CAMERA),
+                CAMERA_PERMISSION_REQUEST_CODE
+            )
+        } else {
+            speakOut("جاري فحص ما هو أمامك عبر الكاميرا...")
+            // هنا سيتم لاحقاً تشغيل نموذج الكاميرا واكتشاف الأشياء
+        }
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == CAMERA_PERMISSION_REQUEST_CODE) {
+            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                speakOut("تمت الموافقة على الكاميرا. جاري فحص المشهد...")
+            } else {
+                speakOut("عذراً، لا يمكن فحص المشهد بدون إذن الكاميرا.")
+            }
         }
     }
 
